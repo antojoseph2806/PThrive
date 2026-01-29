@@ -61,35 +61,43 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
-    // Sign out first to ensure account picker shows
-    await _googleSignIn.signOut();
-    
-    // Trigger Google Sign-In flow
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-    
-    if (googleUser == null) {
-      throw Exception('Google sign-in cancelled');
-    }
+    try {
+      // Sign out first to ensure fresh account picker
+      await _googleSignIn.signOut();
+      
+      // Trigger Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Google sign-in cancelled');
+      }
 
-    // Get authentication details
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    
-    if (googleAuth.idToken == null) {
-      throw Exception('Failed to get Google ID token');
-    }
+      // Get authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      if (googleAuth.idToken == null) {
+        throw Exception('Failed to get Google ID token');
+      }
 
-    // Send ID token to backend for verification
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.authEndpoint}/google'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'idToken': googleAuth.idToken}),
-    ).timeout(const Duration(seconds: 10));
+      // Send ID token to backend for verification
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.authEndpoint}/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': googleAuth.idToken}),
+      ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Google sign-in failed');
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode >= 400 && response.statusCode < 500) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Google sign-in failed');
+      } else {
+        throw Exception('Server error. Please try again.');
+      }
+    } catch (e) {
+      // Clean up on error
+      await _googleSignIn.signOut();
+      rethrow;
     }
   }
 
