@@ -23,6 +23,10 @@ android {
         targetSdk 36
         versionCode 1
         versionName "1.0.0"
+        
+        // Google Sign-In Web Client ID
+        // Replace with your actual Web Client ID from Google Cloud Console
+        resValue "string", "default_web_client_id", "YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com"
     }
 
     buildTypes {

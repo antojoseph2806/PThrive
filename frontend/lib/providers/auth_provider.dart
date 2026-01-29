@@ -93,6 +93,7 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     
     try {
+      await _authService.signOutGoogle();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
     } catch (e) {
@@ -100,6 +101,34 @@ class AuthProvider with ChangeNotifier {
     }
     
     notifyListeners();
+  }
+
+  Future<bool> signInWithGoogle() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _authService.signInWithGoogle();
+      _token = response['token'];
+      _user = response['user'];
+      
+      // Cache data
+      final prefs = await SharedPreferences.getInstance();
+      await Future.wait([
+        prefs.setString('token', _token!),
+        prefs.setString('userName', _user?['fullName'] ?? 'User'),
+      ]);
+      
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   void clearError() {

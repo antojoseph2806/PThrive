@@ -1,9 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const supabase = require('../config/supabase');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Input validation middleware
 const validateRegister = (req, res, next) => {
@@ -121,6 +123,90 @@ router.post('/login', validateLogin, async (req, res, next) => {
       } 
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+// Google Sign-In endpoint
+router.post('/google', async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+      return res.status(400).json({ error: 'Google ID token is required' });
+    }
+
+    // Verify Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email not provided by Google' });
+    }
+
+    // Check if user exists
+    let { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    // If user doesn't exist, create new user
+    if (!user) {
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert([{
+          full_name: name || email.split('@')[0],
+          email: email.toLowerCase(),
+          google_id: googleId,
+          profile_picture: picture,
+          phone_number: '', // Optional for Google sign-in
+          password: '' // No password for Google users
+        }])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Google sign-in error:', insertError);
+        throw new Error('Failed to create user account');
+      }
+
+      user = newUser;
+    } else {
+      // Update Google ID and picture if not set
+      if (!user.google_id) {
+        await supabase
+          .from('users')
+          .update({ 
+            google_id: googleId,
+            profile_picture: picture 
+          })
+          .eq('id', user.id);
+      }
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        email: user.email,
+        profilePicture: user.profile_picture
+      }
+    });
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    if (error.message.includes('Token used too late')) {
+      return res.status(401).json({ error: 'Google token expired. Please try again.' });
+    }
     next(error);
   }
 });
