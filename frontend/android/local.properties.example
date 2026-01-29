@@ -1,0 +1,5 @@
+sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+flutter.sdk=/Users/YOUR_USERNAME/flutter
+flutter.buildMode=debug
+flutter.versionName=1.0.0
+flutter.versionCode=1
