@@ -30,21 +30,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: 200,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF00BCD4)],
+                  colors: [Color(0xFF5B4E9F), Color(0xFF7B6FB8)],
                 ),
               ),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Icon(Icons.favorite, size: 30, color: Color(0xFF2196F3)),
+                    // PThrive Logo
+                    Image.asset(
+                      'assets/images/pthrive_logo.png',
+                      width: 100,
+                      height: 100,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback if logo not found
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Icon(Icons.favorite, size: 30, color: Color(0xFF5B4E9F)),
+                        );
+                      },
                     ),
                     const SizedBox(height: 15),
                     const Text(
@@ -89,12 +98,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             children: [
                               TextSpan(
                                 text: 'Terms & Conditions',
-                                style: TextStyle(color: Color(0xFF2196F3)),
+                                style: TextStyle(color: Color(0xFF5B4E9F)),
                               ),
                               TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Privacy Policy',
-                                style: TextStyle(color: Color(0xFF2196F3)),
+                                style: TextStyle(color: Color(0xFF5B4E9F)),
                               ),
                             ],
                           ),
@@ -113,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? () => _handleRegister(context)
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2196F3),
+                            backgroundColor: const Color(0xFF5B4E9F),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: authProvider.isLoading

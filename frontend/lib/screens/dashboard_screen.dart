@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import 'login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,17 +15,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userName = authProvider.user?['fullName'] ?? 'User';
+    final firstName = userName.split(' ').first;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2196F3),
+        backgroundColor: const Color(0xFF5B4E9F),
         title: const Text('PThrive', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Text('Hello, Sarah', style: TextStyle(color: Colors.white)),
-                SizedBox(width: 10),
+                Text('Hello, $firstName', style: const TextStyle(color: Colors.white)),
+                const SizedBox(width: 10),
               ],
             ),
           ),
@@ -38,31 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green, width: 2),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Active Physiotherapy Treatment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text('Next session: Mon, 3rd Feb • 4:00 PM', style: TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, size: 16),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -70,12 +53,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
                 children: [
-                  _buildDashboardCard(Icons.add_box_outlined, 'Book Physiotherapy', 'Start your healing', const Color(0xFF2196F3)),
-                  _buildDashboardCard(Icons.monitor_heart_outlined, 'PThrive Gear+', 'Custom devices', const Color(0xFF2196F3)),
-                  _buildDashboardCard(Icons.calendar_today_outlined, 'My Sessions', 'View appointments', const Color(0xFF2196F3)),
+                  _buildDashboardCard(Icons.add_box_outlined, 'Book Physiotherapy', 'Start your healing', const Color(0xFF5B4E9F)),
+                  _buildDashboardCard(Icons.monitor_heart_outlined, 'PThrive Gear+', 'Custom devices', const Color(0xFF5B4E9F)),
+                  _buildDashboardCard(Icons.calendar_today_outlined, 'My Sessions', 'View appointments', const Color(0xFF5B4E9F)),
                   _buildDashboardCard(Icons.fitness_center_outlined, 'Exercises', 'Your programs', const Color(0xFFFFA726)),
-                  _buildDashboardCard(Icons.bar_chart_outlined, 'Progress & Reports', 'Track recovery', const Color(0xFF2196F3)),
-                  _buildDashboardCard(Icons.settings_outlined, 'Profile & Settings', 'Manage account', const Color(0xFF2196F3)),
+                  _buildDashboardCard(Icons.bar_chart_outlined, 'Progress & Reports', 'Track recovery', const Color(0xFF5B4E9F)),
+                  _buildDashboardCard(Icons.settings_outlined, 'Profile & Settings', 'Manage account', const Color(0xFF5B4E9F)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -84,7 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   _buildBottomAction(Icons.phone_outlined, 'Emergency\nContact'),
                   _buildBottomAction(Icons.chat_bubble_outline, 'Support Chat'),
-                  _buildBottomAction(Icons.star_outline, 'Rate\nExperience'),
+                  _buildBottomAction(Icons.logout_outlined, 'Logout', onTap: () => _handleLogout(context)),
                 ],
               ),
             ],
@@ -95,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2196F3),
+        selectedItemColor: const Color(0xFF5B4E9F),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Sessions'),
@@ -133,13 +116,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBottomAction(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: const Color(0xFF2196F3)),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
-      ],
+  Widget _buildBottomAction(IconData icon, String label, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: const Color(0xFF5B4E9F)),
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
+        ],
+      ),
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.logout();
+    
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 }

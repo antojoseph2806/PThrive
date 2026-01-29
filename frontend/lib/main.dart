@@ -12,10 +12,16 @@ void main() {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Color(0xFF5B4E9F),
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+  
+  // Set preferred orientations
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   
   runApp(
     MultiProvider(
@@ -36,11 +42,11 @@ class MyApp extends StatelessWidget {
       title: 'PThrive',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF2196F3),
+        primaryColor: const Color(0xFF5B4E9F),
         scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2196F3),
-          primary: const Color(0xFF2196F3),
+          seedColor: const Color(0xFF5B4E9F),
+          primary: const Color(0xFF5B4E9F),
         ),
       ),
       home: const SplashScreen(),

@@ -26,25 +26,34 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 280,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF00BCD4)],
+                  colors: [Color(0xFF5B4E9F), Color(0xFF7B6FB8)],
                 ),
               ),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.favorite,
-                        size: 40,
-                        color: Color(0xFF2196F3),
-                      ),
+                    // PThrive Logo
+                    Image.asset(
+                      'assets/images/pthrive_logo.png',
+                      width: 120,
+                      height: 120,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback if logo not found
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.favorite,
+                            size: 40,
+                            color: Color(0xFF5B4E9F),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -137,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: authProvider.isLoading ? null : () => _handleLogin(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2196F3),
+                            backgroundColor: const Color(0xFF5B4E9F),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

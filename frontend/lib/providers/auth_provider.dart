@@ -19,11 +19,24 @@ class AuthProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       _token = prefs.getString('token');
-      final userJson = prefs.getString('user');
-      if (userJson != null) {
-        // Cache user data for faster loading
-        _user = {'fullName': prefs.getString('userName') ?? 'User'};
+      
+      if (_token != null) {
+        // Load user data from storage
+        final userId = prefs.getString('userId');
+        final userName = prefs.getString('userName');
+        final userEmail = prefs.getString('userEmail');
+        final userProfilePicture = prefs.getString('userProfilePicture');
+        
+        if (userId != null && userName != null) {
+          _user = {
+            'id': userId,
+            'fullName': userName,
+            'email': userEmail,
+            'profilePicture': userProfilePicture,
+          };
+        }
       }
+      
       notifyListeners();
     } catch (e) {
       _error = 'Failed to load session';
@@ -37,16 +50,25 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _authService.login(email, password);
+      // Start API call and storage access in parallel
+      final responseFuture = _authService.login(email, password);
+      final prefsFuture = SharedPreferences.getInstance();
+      
+      final results = await Future.wait([responseFuture, prefsFuture]);
+      final response = results[0] as Map<String, dynamic>;
+      final prefs = results[1] as SharedPreferences;
+      
       _token = response['token'];
       _user = response['user'];
       
-      // Cache data for faster subsequent loads
-      final prefs = await SharedPreferences.getInstance();
-      await Future.wait([
-        prefs.setString('token', _token!),
-        prefs.setString('userName', _user?['fullName'] ?? 'User'),
-      ]);
+      // Save data without waiting
+      prefs.setString('token', _token!);
+      prefs.setString('userId', _user?['id'] ?? '');
+      prefs.setString('userName', _user?['fullName'] ?? 'User');
+      prefs.setString('userEmail', _user?['email'] ?? email);
+      if (_user?['profilePicture'] != null) {
+        prefs.setString('userProfilePicture', _user!['profilePicture']);
+      }
       
       _isLoading = false;
       notifyListeners();
@@ -65,16 +87,25 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _authService.register(fullName, email, phoneNumber, password);
+      // Start API call and storage access in parallel
+      final responseFuture = _authService.register(fullName, email, phoneNumber, password);
+      final prefsFuture = SharedPreferences.getInstance();
+      
+      final results = await Future.wait([responseFuture, prefsFuture]);
+      final response = results[0] as Map<String, dynamic>;
+      final prefs = results[1] as SharedPreferences;
+      
       _token = response['token'];
       _user = response['user'];
       
-      // Cache data for faster subsequent loads
-      final prefs = await SharedPreferences.getInstance();
-      await Future.wait([
-        prefs.setString('token', _token!),
-        prefs.setString('userName', fullName),
-      ]);
+      // Save data without waiting
+      prefs.setString('token', _token!);
+      prefs.setString('userId', _user?['id'] ?? '');
+      prefs.setString('userName', _user?['fullName'] ?? fullName);
+      prefs.setString('userEmail', _user?['email'] ?? email);
+      if (_user?['profilePicture'] != null) {
+        prefs.setString('userProfilePicture', _user!['profilePicture']);
+      }
       
       _isLoading = false;
       notifyListeners();
@@ -109,16 +140,25 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _authService.signInWithGoogle();
+      // Start API call and storage access in parallel
+      final responseFuture = _authService.signInWithGoogle();
+      final prefsFuture = SharedPreferences.getInstance();
+      
+      final results = await Future.wait([responseFuture, prefsFuture]);
+      final response = results[0] as Map<String, dynamic>;
+      final prefs = results[1] as SharedPreferences;
+      
       _token = response['token'];
       _user = response['user'];
       
-      // Cache data
-      final prefs = await SharedPreferences.getInstance();
-      await Future.wait([
-        prefs.setString('token', _token!),
-        prefs.setString('userName', _user?['fullName'] ?? 'User'),
-      ]);
+      // Save data without waiting
+      prefs.setString('token', _token!);
+      prefs.setString('userId', _user?['id'] ?? '');
+      prefs.setString('userName', _user?['fullName'] ?? 'User');
+      prefs.setString('userEmail', _user?['email'] ?? '');
+      if (_user?['profilePicture'] != null) {
+        prefs.setString('userProfilePicture', _user!['profilePicture']);
+      }
       
       _isLoading = false;
       notifyListeners();
