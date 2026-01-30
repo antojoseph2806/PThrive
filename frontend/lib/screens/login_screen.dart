@@ -39,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/images/pthrive_logo.png',
                       width: 120,
                       height: 120,
+                      fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         // Fallback if logo not found
                         return Container(

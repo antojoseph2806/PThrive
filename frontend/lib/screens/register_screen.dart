@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/validators.dart';
 import 'dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,20 +13,75 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmPasswordFocus = FocusNode();
+  
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
+  
+  // Track if fields have been touched for validation
+  bool _nameValidated = false;
+  bool _emailValidated = false;
+  bool _phoneValidated = false;
+  bool _passwordValidated = false;
+  bool _confirmPasswordValidated = false;
+
+  
+  @override
+  void initState() {
+    super.initState();
+    
+    // Add listeners to validate when focus changes
+    _nameFocus.addListener(() {
+      if (!_nameFocus.hasFocus && _nameController.text.isNotEmpty) {
+        setState(() => _nameValidated = true);
+      }
+    });
+    
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus && _emailController.text.isNotEmpty) {
+        setState(() => _emailValidated = true);
+      }
+    });
+    
+    _phoneFocus.addListener(() {
+      if (!_phoneFocus.hasFocus && _phoneController.text.isNotEmpty) {
+        setState(() => _phoneValidated = true);
+      }
+    });
+    
+    _passwordFocus.addListener(() {
+      if (!_passwordFocus.hasFocus && _passwordController.text.isNotEmpty) {
+        setState(() => _passwordValidated = true);
+      }
+    });
+    
+    _confirmPasswordFocus.addListener(() {
+      if (!_confirmPasswordFocus.hasFocus && _confirmPasswordController.text.isNotEmpty) {
+        setState(() => _confirmPasswordValidated = true);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.disabled,
+        child: SingleChildScrollView(
+          child: Column(
           children: [
             Container(
               height: 200,
@@ -40,8 +97,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // PThrive Logo
                     Image.asset(
                       'assets/images/pthrive_logo.png',
-                      width: 100,
-                      height: 100,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         // Fallback if logo not found
                         return Container(
@@ -70,19 +128,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTextField('FULL NAME', _nameController, Icons.person_outline, 'John Doe'),
+                  _buildValidatedTextField(
+                    'FULL NAME',
+                    _nameController,
+                    _nameFocus,
+                    Icons.person_outline,
+                    'Enter your full name (letters only)',
+                    TextInputType.text,
+                    Validators.validateName,
+                    _nameValidated,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField('EMAIL ADDRESS', _emailController, Icons.email_outlined, 'user@example.com'),
+                  _buildValidatedTextField(
+                    'EMAIL ADDRESS',
+                    _emailController,
+                    _emailFocus,
+                    Icons.email_outlined,
+                    'Enter your email address',
+                    TextInputType.emailAddress,
+                    Validators.validateEmail,
+                    _emailValidated,
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField('PHONE NUMBER', _phoneController, Icons.phone_outlined, '+1 (555) 000-0000'),
+                  _buildValidatedTextField(
+                    'PHONE NUMBER',
+                    _phoneController,
+                    _phoneFocus,
+                    Icons.phone_outlined,
+                    'Enter 10-digit phone number',
+                    TextInputType.phone,
+                    Validators.validatePhone,
+                    _phoneValidated,
+                    maxLength: 10,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
                   const SizedBox(height: 16),
-                  _buildPasswordField('PASSWORD', _passwordController, _obscurePassword, () {
-                    setState(() => _obscurePassword = !_obscurePassword);
-                  }),
+                  _buildValidatedPasswordField(
+                    'PASSWORD',
+                    _passwordController,
+                    _passwordFocus,
+                    _obscurePassword,
+                    () => setState(() => _obscurePassword = !_obscurePassword),
+                    Validators.validatePassword,
+                    _passwordValidated,
+                  ),
                   const SizedBox(height: 16),
-                  _buildPasswordField('CONFIRM PASSWORD', _confirmPasswordController, _obscureConfirmPassword, () {
-                    setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
-                  }),
+                  _buildValidatedPasswordField(
+                    'CONFIRM PASSWORD',
+                    _confirmPasswordController,
+                    _confirmPasswordFocus,
+                    _obscureConfirmPassword,
+                    () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                    (value) => Validators.validateConfirmPassword(value, _passwordController.text),
+                    _confirmPasswordValidated,
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -194,51 +294,107 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, String hint) {
-    String placeholderText = '';
-    if (label.contains('NAME')) {
-      placeholderText = 'Enter your full name';
-    } else if (label.contains('EMAIL')) {
-      placeholderText = 'Enter your email address';
-    } else if (label.contains('PHONE')) {
-      placeholderText = 'Enter your phone number';
-    }
-
+  Widget _buildValidatedTextField(
+    String label,
+    TextEditingController controller,
+    FocusNode focusNode,
+    IconData icon,
+    String hint,
+    TextInputType keyboardType,
+    String? Function(String?) validator,
+    bool shouldValidate, {
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
-          keyboardType: label.contains('EMAIL') ? TextInputType.emailAddress : 
-                       label.contains('PHONE') ? TextInputType.phone : TextInputType.text,
+          focusNode: focusNode,
+          keyboardType: keyboardType,
+          maxLength: maxLength,
+          inputFormatters: inputFormatters,
+          validator: shouldValidate ? validator : null,
+          autovalidateMode: shouldValidate 
+              ? AutovalidateMode.always 
+              : AutovalidateMode.disabled,
           decoration: InputDecoration(
-            hintText: placeholderText,
+            hintText: hint,
             prefixIcon: Icon(icon),
             filled: true,
             fillColor: Colors.grey[100],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            counterText: maxLength != null ? '' : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            errorStyle: const TextStyle(fontSize: 12),
           ),
+          onChanged: (value) {
+            if (shouldValidate) {
+              setState(() {}); // Trigger rebuild to show validation
+            }
+          },
         ),
       ],
     );
   }
 
-  Widget _buildPasswordField(String label, TextEditingController controller, bool obscure, VoidCallback toggle) {
-    String placeholderText = label.contains('CONFIRM') ? 'Confirm your password' : 'Enter your password';
+  Widget _buildValidatedPasswordField(
+    String label,
+    TextEditingController controller,
+    FocusNode focusNode,
+    bool obscure,
+    VoidCallback toggle,
+    String? Function(String?) validator,
+    bool shouldValidate,
+  ) {
+    String placeholderText = label.contains('CONFIRM') 
+        ? 'Confirm your password' 
+        : 'Enter your password';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscure,
+          validator: shouldValidate ? validator : null,
+          autovalidateMode: shouldValidate 
+              ? AutovalidateMode.always 
+              : AutovalidateMode.disabled,
           decoration: InputDecoration(
             hintText: placeholderText,
             prefixIcon: const Icon(Icons.lock_outline),
@@ -248,27 +404,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             filled: true,
             fillColor: Colors.grey[100],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            errorStyle: const TextStyle(fontSize: 12),
+            errorMaxLines: 2,
           ),
+          onChanged: (value) {
+            if (shouldValidate) {
+              setState(() {}); // Trigger rebuild to show validation
+            }
+          },
         ),
       ],
     );
   }
 
   Future<void> _handleRegister(BuildContext context) async {
-    if (_nameController.text.trim().isEmpty || _emailController.text.trim().isEmpty || 
-        _phoneController.text.trim().isEmpty || _passwordController.text.length < 6) {
-      _showError(context, 'Fill all fields correctly');
-      return;
-    }
+    // Mark all fields as validated to show errors
+    setState(() {
+      _nameValidated = true;
+      _emailValidated = true;
+      _phoneValidated = true;
+      _passwordValidated = true;
+      _confirmPasswordValidated = true;
+    });
 
-    if (!_emailController.text.contains('@')) {
-      _showError(context, 'Invalid email');
-      return;
-    }
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showError(context, 'Passwords do not match');
+    // Validate all fields
+    if (!_formKey.currentState!.validate()) {
+      _showError(context, 'Please fix all errors before submitting');
       return;
     }
 
@@ -283,10 +456,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
       }
     } catch (e) {
-      if (mounted) _showError(context, e.toString().replaceAll('Exception: ', ''));
+      if (mounted) {
+        _showError(context, e.toString().replaceAll('Exception: ', ''));
+      }
     }
   }
 
@@ -325,6 +503,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     super.dispose();
   }
 }
