@@ -62,28 +62,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildBottomAction(Icons.phone_outlined, 'Emergency\nContact'),
-                  _buildBottomAction(Icons.chat_bubble_outline, 'Support Chat'),
-                  _buildBottomAction(Icons.logout_outlined, 'Logout', onTap: () => _handleLogout(context)),
-                ],
-              ),
             ],
           ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        onTap: (index) {
+          if (index == 3) {
+            _handleLogout(context);
+          } else {
+            setState(() => _selectedIndex = index);
+          }
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF5B4E9F),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Sessions'),
           BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Exercises'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'Logout'),
         ],
       ),
     );
@@ -112,19 +110,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomAction(IconData icon, String label, {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF5B4E9F)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey), textAlign: TextAlign.center),
-        ],
       ),
     );
   }
