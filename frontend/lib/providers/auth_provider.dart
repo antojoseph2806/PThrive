@@ -46,11 +46,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> login(String emailOrPhone, String password) async {
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
     try {
-      // Start API call and storage access in parallel
       final responseFuture = _authService.login(emailOrPhone, password);
       final prefsFuture = SharedPreferences.getInstance();
       
@@ -61,33 +59,32 @@ class AuthProvider with ChangeNotifier {
       _token = response['token'];
       _user = response['user'];
       
-      // Save data without waiting
-      prefs.setString('token', _token!);
-      prefs.setString('userId', _user?['id'] ?? '');
-      prefs.setString('userName', _user?['fullName'] ?? 'User');
-      prefs.setString('userEmail', _user?['email'] ?? '');
+      // Fire and forget storage
+      unawaited(prefs.setString('token', _token!));
+      unawaited(prefs.setString('userId', _user?['id'] ?? ''));
+      unawaited(prefs.setString('userName', _user?['fullName'] ?? 'User'));
+      unawaited(prefs.setString('userEmail', _user?['email'] ?? ''));
       if (_user?['profilePicture'] != null) {
-        prefs.setString('userProfilePicture', _user!['profilePicture']);
+        unawaited(prefs.setString('userProfilePicture', _user!['profilePicture']));
       }
       
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
       rethrow;
     }
   }
+  
+  void unawaited(Future<void> future) {}
 
   Future<bool> register(String fullName, String email, String phoneNumber, String password) async {
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
     try {
-      // Start API call and storage access in parallel
       final responseFuture = _authService.register(fullName, email, phoneNumber, password);
       final prefsFuture = SharedPreferences.getInstance();
       
@@ -98,20 +95,19 @@ class AuthProvider with ChangeNotifier {
       _token = response['token'];
       _user = response['user'];
       
-      // Save data without waiting
-      prefs.setString('token', _token!);
-      prefs.setString('userId', _user?['id'] ?? '');
-      prefs.setString('userName', _user?['fullName'] ?? fullName);
-      prefs.setString('userEmail', _user?['email'] ?? email);
+      // Fire and forget storage
+      unawaited(prefs.setString('token', _token!));
+      unawaited(prefs.setString('userId', _user?['id'] ?? ''));
+      unawaited(prefs.setString('userName', _user?['fullName'] ?? fullName));
+      unawaited(prefs.setString('userEmail', _user?['email'] ?? email));
       if (_user?['profilePicture'] != null) {
-        prefs.setString('userProfilePicture', _user!['profilePicture']);
+        unawaited(prefs.setString('userProfilePicture', _user!['profilePicture']));
       }
       
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
       rethrow;
@@ -136,11 +132,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> signInWithGoogle() async {
     _isLoading = true;
-    _error = null;
     notifyListeners();
 
     try {
-      // Start API call and storage access in parallel
       final responseFuture = _authService.signInWithGoogle();
       final prefsFuture = SharedPreferences.getInstance();
       
@@ -151,20 +145,19 @@ class AuthProvider with ChangeNotifier {
       _token = response['token'];
       _user = response['user'];
       
-      // Save data without waiting
-      prefs.setString('token', _token!);
-      prefs.setString('userId', _user?['id'] ?? '');
-      prefs.setString('userName', _user?['fullName'] ?? 'User');
-      prefs.setString('userEmail', _user?['email'] ?? '');
+      // Fire and forget storage
+      unawaited(prefs.setString('token', _token!));
+      unawaited(prefs.setString('userId', _user?['id'] ?? ''));
+      unawaited(prefs.setString('userName', _user?['fullName'] ?? 'User'));
+      unawaited(prefs.setString('userEmail', _user?['email'] ?? ''));
       if (_user?['profilePicture'] != null) {
-        prefs.setString('userProfilePicture', _user!['profilePicture']);
+        unawaited(prefs.setString('userProfilePicture', _user!['profilePicture']));
       }
       
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
       notifyListeners();
       rethrow;

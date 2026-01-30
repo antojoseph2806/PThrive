@@ -248,25 +248,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin(BuildContext context) async {
-    // Validate inputs
-    if (_emailOrPhoneController.text.trim().isEmpty) {
+    if (_emailOrPhoneController.text.trim().isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email or phone number'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    if (_passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your password'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: Text('Fill all fields'), backgroundColor: Colors.orange, duration: Duration(seconds: 1)),
       );
       return;
     }
@@ -274,34 +258,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      await authProvider.login(
-        _emailOrPhoneController.text.trim(),
-        _passwordController.text,
-      );
-
+      await authProvider.login(_emailOrPhoneController.text.trim(), _passwordController.text);
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(e.toString().replaceAll('Exception: ', '')),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red[700],
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-          ),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
         );
       }
     }

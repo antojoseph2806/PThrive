@@ -256,29 +256,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister(BuildContext context) async {
-    // Validate inputs
-    if (_nameController.text.trim().isEmpty) {
-      _showError(context, 'Please enter your full name');
-      return;
-    }
-
-    if (_emailController.text.trim().isEmpty) {
-      _showError(context, 'Please enter your email');
+    if (_nameController.text.trim().isEmpty || _emailController.text.trim().isEmpty || 
+        _phoneController.text.trim().isEmpty || _passwordController.text.length < 6) {
+      _showError(context, 'Fill all fields correctly');
       return;
     }
 
     if (!_emailController.text.contains('@')) {
-      _showError(context, 'Please enter a valid email');
-      return;
-    }
-
-    if (_phoneController.text.trim().isEmpty) {
-      _showError(context, 'Please enter your phone number');
-      return;
-    }
-
-    if (_passwordController.text.length < 6) {
-      _showError(context, 'Password must be at least 6 characters');
+      _showError(context, 'Invalid email');
       return;
     }
 
@@ -298,15 +283,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
       }
     } catch (e) {
-      if (mounted) {
-        _showError(context, e.toString().replaceAll('Exception: ', ''));
-      }
+      if (mounted) _showError(context, e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -334,18 +314,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.red[700],
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red, duration: const Duration(seconds: 2)),
     );
   }
 

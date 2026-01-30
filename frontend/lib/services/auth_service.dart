@@ -18,27 +18,21 @@ class AuthService {
         Uri.parse('${ApiConfig.authEndpoint}/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'emailOrPhone': emailOrPhone, 'password': password}),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 401) {
-        throw Exception('Invalid credentials. Please check your email/phone and password.');
+        throw Exception('Invalid credentials');
       } else if (response.statusCode >= 500) {
-        throw Exception('Service temporarily unavailable');
+        throw Exception('Service unavailable');
       } else {
-        try {
-          final error = jsonDecode(response.body);
-          throw Exception(error['error'] ?? 'Login failed. Please try again.');
-        } catch (_) {
-          throw Exception('Login failed. Please try again.');
-        }
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Login failed');
       }
     } catch (e) {
-      if (e.toString().contains('Exception:')) {
-        rethrow;
-      }
-      throw Exception('Unable to connect. Please check your internet connection.');
+      if (e.toString().contains('Exception:')) rethrow;
+      throw Exception('Connection failed');
     }
   }
 
@@ -58,27 +52,21 @@ class AuthService {
           'phoneNumber': phoneNumber,
           'password': password,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 201) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 409) {
-        throw Exception('Email already registered. Please login instead.');
+        throw Exception('Email already registered');
       } else if (response.statusCode >= 500) {
-        throw Exception('Service temporarily unavailable');
+        throw Exception('Service unavailable');
       } else {
-        try {
-          final error = jsonDecode(response.body);
-          throw Exception(error['error'] ?? 'Registration failed. Please try again.');
-        } catch (_) {
-          throw Exception('Registration failed. Please try again.');
-        }
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Registration failed');
       }
     } catch (e) {
-      if (e.toString().contains('Exception:')) {
-        rethrow;
-      }
-      throw Exception('Unable to connect. Please check your internet connection.');
+      if (e.toString().contains('Exception:')) rethrow;
+      throw Exception('Connection failed');
     }
   }
 

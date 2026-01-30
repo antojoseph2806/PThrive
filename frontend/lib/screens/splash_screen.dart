@@ -56,27 +56,31 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // PThrive Icon
-              Image.asset(
-                'assets/images/app_icon.png',
-                width: 150,
-                height: 150,
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback if icon not found
-                  return Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Icon(
-                      Icons.favorite_border,
-                      size: 60,
-                      color: Color(0xFF3B82F6),
-                    ),
-                  );
-                },
+              // PThrive Icon with padding to prevent cropping
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Image.asset(
+                  'assets/images/app_logo.png',
+                  width: 180,
+                  height: 180,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback if icon not found
+                    return Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border,
+                        size: 60,
+                        color: Color(0xFF3B82F6),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 30),
               const Text(
