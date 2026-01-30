@@ -59,20 +59,30 @@ const validateLogin = (req, res, next) => {
 };
 
 const validateForgotPassword = (req, res, next) => {
-  const { email } = req.body;
+  const { emailOrPhone } = req.body;
   
-  if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-    return res.status(400).json({ error: 'Please provide a valid email address' });
+  if (!emailOrPhone || !emailOrPhone.trim()) {
+    return res.status(400).json({ error: 'Please provide your email address or phone number' });
+  }
+  
+  const trimmed = emailOrPhone.trim();
+  
+  // Check if it's an email or phone number
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  const isPhone = /^[\d\s\-\+\(\)]{10,15}$/.test(trimmed.replace(/\D/g, ''));
+  
+  if (!isEmail && !isPhone) {
+    return res.status(400).json({ error: 'Please provide a valid email address or phone number' });
   }
   
   next();
 };
 
 const validateResetPassword = (req, res, next) => {
-  const { email, otp, newPassword } = req.body;
+  const { emailOrPhone, otp, newPassword } = req.body;
   
-  if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-    return res.status(400).json({ error: 'Please provide a valid email address' });
+  if (!emailOrPhone || !emailOrPhone.trim()) {
+    return res.status(400).json({ error: 'Please provide your email address or phone number' });
   }
   
   if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
@@ -253,34 +263,92 @@ router.post('/google', async (req, res, next) => {
 // Forgot Password - Send OTP
 router.post('/forgot-password', validateForgotPassword, async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { emailOrPhone } = req.body;
+    const input = emailOrPhone.trim();
     
-    // Check if user exists and has phone number
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, phone_number, full_name')
-      .eq('email', email.toLowerCase().trim())
-      .single();
-
-    if (error || !user) {
-      return res.status(404).json({ error: 'No account found with this email address' });
+    // Determine if input is email or phone
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    let user;
+    
+    if (isEmail) {
+      // Search by email
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, phone_number, full_name, email')
+        .eq('email', input.toLowerCase())
+        .single();
+      
+      if (error || !data) {
+        return res.status(404).json({ 
+          error: 'We couldn\'t find an account with this email address. Please check your email or create a new account.' 
+        });
+      }
+      user = data;
+    } else {
+      // Search by phone number
+      let phoneNumber = input.replace(/\D/g, '');
+      
+      // Try different phone number formats
+      const phoneVariants = [];
+      if (phoneNumber.startsWith('0')) {
+        phoneVariants.push(phoneNumber); // Original with 0
+        phoneVariants.push('91' + phoneNumber.substring(1)); // +91 format
+        phoneVariants.push(phoneNumber.substring(1)); // Without 0
+      } else if (phoneNumber.startsWith('91')) {
+        phoneVariants.push(phoneNumber); // Original +91 format
+        phoneVariants.push('0' + phoneNumber.substring(2)); // 0 format
+        phoneVariants.push(phoneNumber.substring(2)); // Without country code
+      } else {
+        phoneVariants.push(phoneNumber); // Original
+        phoneVariants.push('91' + phoneNumber); // +91 format
+        phoneVariants.push('0' + phoneNumber); // 0 format
+      }
+      
+      // Search for user with any phone variant
+      let userData = null;
+      for (const variant of phoneVariants) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, phone_number, full_name, email')
+          .eq('phone_number', variant)
+          .single();
+        
+        if (data && !error) {
+          userData = data;
+          break;
+        }
+      }
+      
+      if (!userData) {
+        return res.status(404).json({ 
+          error: 'We couldn\'t find an account with this phone number. Please check your number or create a new account.' 
+        });
+      }
+      user = userData;
     }
 
+    // Check if user has a valid phone number
     if (!user.phone_number || user.phone_number.trim() === '') {
-      return res.status(400).json({ 
-        error: 'Phone number not found. Please contact support to reset your password.' 
-      });
+      if (isEmail) {
+        return res.status(400).json({ 
+          error: 'Your account doesn\'t have a mobile number registered. Please contact our support team to update your profile and reset your password.' 
+        });
+      } else {
+        return res.status(400).json({ 
+          error: 'There seems to be an issue with your mobile number. Please contact our support team for assistance.' 
+        });
+      }
     }
 
     // Check rate limiting (max 3 attempts per hour)
-    const rateLimitKey = `rate_limit_${email.toLowerCase()}`;
+    const rateLimitKey = `rate_limit_${user.id}`;
     const rateLimitData = otpStorage.get(rateLimitKey);
     const now = Date.now();
     
     if (rateLimitData && rateLimitData.attempts >= 3 && now < rateLimitData.resetTime) {
       const remainingTime = Math.ceil((rateLimitData.resetTime - now) / (60 * 1000));
       return res.status(429).json({ 
-        error: `Too many attempts. Please try again in ${remainingTime} minutes.` 
+        error: `You've reached the maximum number of attempts. Please try again in ${remainingTime} minutes for your security.` 
       });
     }
 
@@ -295,74 +363,99 @@ router.post('/forgot-password', validateForgotPassword, async (req, res, next) =
       phoneNumber = '91' + phoneNumber;
     }
 
-    try {
-      // Send OTP via 2factor.in
-      const response = await axios.get('https://2factor.in/API/V1/' + process.env.TWOFACTOR_API_KEY + '/SMS/' + phoneNumber + '/' + otp, {
-        timeout: 10000
-      });
+    // Store OTP immediately for faster response
+    const otpKey = `otp_${user.id}`;
+    otpStorage.set(otpKey, {
+      otp,
+      userId: user.id,
+      emailOrPhone: input,
+      expiresAt: now + (5 * 60 * 1000), // 5 minutes
+      attempts: 0
+    });
 
-      if (response.data.Status !== 'Success') {
-        console.error('2Factor API error:', response.data);
-        return res.status(500).json({ error: 'Unable to send OTP. Please try again later.' });
+    // Update rate limiting
+    const currentAttempts = rateLimitData ? rateLimitData.attempts + 1 : 1;
+    otpStorage.set(rateLimitKey, {
+      attempts: currentAttempts,
+      resetTime: now + (60 * 60 * 1000) // 1 hour
+    });
+
+    // Mask phone number for response
+    const maskedPhone = phoneNumber.replace(/(\d{2})(\d{4})(\d{4})/, '$1****$3');
+
+    // Send response immediately, then send SMS asynchronously
+    res.json({ 
+      message: `We've sent a verification code to your mobile number ending with ${maskedPhone.slice(-4)}. Please check your messages.`,
+      expiresIn: 300, // 5 minutes in seconds
+      userId: user.id
+    });
+
+    // Send OTP asynchronously for faster response
+    setImmediate(async () => {
+      try {
+        const response = await axios.get(
+          `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/${otp}`,
+          { timeout: 8000 }
+        );
+
+        if (response.data.Status !== 'Success') {
+          console.error('2Factor API error:', response.data);
+          // Update OTP storage to mark as failed
+          otpStorage.delete(otpKey);
+        }
+      } catch (apiError) {
+        console.error('SMS API error:', apiError.message);
+        // Update OTP storage to mark as failed
+        otpStorage.delete(otpKey);
       }
-
-      // Store OTP with 5-minute expiry
-      const otpKey = `otp_${email.toLowerCase()}`;
-      otpStorage.set(otpKey, {
-        otp,
-        userId: user.id,
-        expiresAt: now + (5 * 60 * 1000), // 5 minutes
-        attempts: 0
-      });
-
-      // Update rate limiting
-      const currentAttempts = rateLimitData ? rateLimitData.attempts + 1 : 1;
-      otpStorage.set(rateLimitKey, {
-        attempts: currentAttempts,
-        resetTime: now + (60 * 60 * 1000) // 1 hour
-      });
-
-      // Mask phone number for response
-      const maskedPhone = phoneNumber.replace(/(\d{2})(\d{4})(\d{4})/, '$1****$3');
-      
-      res.json({ 
-        message: `OTP sent to your registered mobile number ending with ${maskedPhone.slice(-4)}`,
-        expiresIn: 300 // 5 minutes in seconds
-      });
-
-    } catch (apiError) {
-      console.error('SMS API error:', apiError.message);
-      return res.status(500).json({ error: 'Unable to send OTP. Please try again later.' });
-    }
+    });
 
   } catch (error) {
     console.error('Forgot password error:', error);
-    next(error);
+    return res.status(500).json({ 
+      error: 'We\'re experiencing technical difficulties. Please try again in a few moments.' 
+    });
   }
 });
 
 // Reset Password - Verify OTP and Update Password
 router.post('/reset-password', validateResetPassword, async (req, res, next) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { emailOrPhone, otp, newPassword } = req.body;
+    const input = emailOrPhone.trim();
     
-    const otpKey = `otp_${email.toLowerCase()}`;
-    const otpData = otpStorage.get(otpKey);
+    // Find the OTP data by searching all stored OTPs
+    let otpData = null;
+    let otpKey = null;
+    
+    for (const [key, data] of otpStorage.entries()) {
+      if (key.startsWith('otp_') && data.emailOrPhone === input) {
+        otpData = data;
+        otpKey = key;
+        break;
+      }
+    }
     
     if (!otpData) {
-      return res.status(400).json({ error: 'OTP expired or invalid. Please request a new one.' });
+      return res.status(400).json({ 
+        error: 'The verification code has expired or is invalid. Please request a new code.' 
+      });
     }
 
     // Check if OTP is expired
     if (Date.now() > otpData.expiresAt) {
       otpStorage.delete(otpKey);
-      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+      return res.status(400).json({ 
+        error: 'The verification code has expired. Please request a new code.' 
+      });
     }
 
     // Check OTP attempts (max 3 attempts)
     if (otpData.attempts >= 3) {
       otpStorage.delete(otpKey);
-      return res.status(400).json({ error: 'Too many incorrect attempts. Please request a new OTP.' });
+      return res.status(400).json({ 
+        error: 'You\'ve entered an incorrect code too many times. Please request a new verification code.' 
+      });
     }
 
     // Verify OTP
@@ -372,32 +465,48 @@ router.post('/reset-password', validateResetPassword, async (req, res, next) => 
       
       const remainingAttempts = 3 - otpData.attempts;
       return res.status(400).json({ 
-        error: `Invalid OTP. ${remainingAttempts} attempts remaining.` 
+        error: `Incorrect verification code. You have ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.` 
       });
     }
 
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Hash new password and update database in parallel
+    const hashPasswordPromise = bcrypt.hash(newPassword, 10);
     
-    // Update password in database
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('id', otpData.userId);
+    try {
+      const hashedPassword = await hashPasswordPromise;
+      
+      // Update password in database
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ password: hashedPassword })
+        .eq('id', otpData.userId);
 
-    if (updateError) {
-      console.error('Password update error:', updateError);
-      return res.status(500).json({ error: 'Failed to update password. Please try again.' });
+      if (updateError) {
+        console.error('Password update error:', updateError);
+        return res.status(500).json({ 
+          error: 'We couldn\'t update your password right now. Please try again in a moment.' 
+        });
+      }
+
+      // Clean up OTP data
+      otpStorage.delete(otpKey);
+      
+      res.json({ 
+        message: 'Your password has been reset successfully! You can now sign in with your new password.' 
+      });
+
+    } catch (hashError) {
+      console.error('Password hashing error:', hashError);
+      return res.status(500).json({ 
+        error: 'We couldn\'t process your request right now. Please try again in a moment.' 
+      });
     }
-
-    // Clean up OTP data
-    otpStorage.delete(otpKey);
-    
-    res.json({ message: 'Password reset successfully. You can now login with your new password.' });
 
   } catch (error) {
     console.error('Reset password error:', error);
-    next(error);
+    return res.status(500).json({ 
+      error: 'We\'re experiencing technical difficulties. Please try again in a few moments.' 
+    });
   }
 });
 

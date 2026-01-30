@@ -176,16 +176,16 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> forgotPassword(String email) async {
+  Future<Map<String, dynamic>> forgotPassword(String emailOrPhone) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await _authService.forgotPassword(email);
+      final result = await _authService.forgotPassword(emailOrPhone);
       _isLoading = false;
       notifyListeners();
-      return true;
+      return result;
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
@@ -194,13 +194,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> resetPassword(String email, String otp, String newPassword) async {
+  Future<bool> resetPassword(String emailOrPhone, String otp, String newPassword) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await _authService.resetPassword(email, otp, newPassword);
+      await _authService.resetPassword(emailOrPhone, otp, newPassword);
       _isLoading = false;
       notifyListeners();
       return true;

@@ -9,11 +9,11 @@ import '../utils/validators.dart';
 import 'login_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  final String email;
+  final String emailOrPhone;
   
   const ResetPasswordScreen({
     super.key,
-    required this.email,
+    required this.emailOrPhone,
   });
 
   @override
@@ -68,7 +68,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Future<void> _resendOTP() async {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.forgotPassword(widget.email);
+      await authProvider.forgotPassword(widget.emailOrPhone);
       
       // Reset timer
       setState(() => _remainingTime = 300);
@@ -95,7 +95,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.resetPassword(
-        widget.email,
+        widget.emailOrPhone,
         _otpController.text.trim(),
         _passwordController.text,
       );
@@ -187,9 +187,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     
                     const SizedBox(height: 12),
                     
-                    // Subtitle with email
+                    // Subtitle with email or phone
                     Text(
-                      'OTP sent to your registered mobile number for ${widget.email}',
+                      'OTP sent to your registered mobile number for ${widget.emailOrPhone}',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,

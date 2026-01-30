@@ -15,12 +15,12 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailOrPhoneController = TextEditingController();
   bool _isSubmitted = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailOrPhoneController.dispose();
     super.dispose();
   }
 
@@ -31,17 +31,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.forgotPassword(_emailController.text.trim());
+      final result = await authProvider.forgotPassword(_emailOrPhoneController.text.trim());
       
-      if (success && mounted) {
-        // Navigate to reset password screen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => ResetPasswordScreen(
-              email: _emailController.text.trim(),
+      if (mounted) {
+        // Show success message briefly before navigation
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(result['message'] ?? 'Verification code sent successfully!'),
+                ),
+              ],
             ),
+            backgroundColor: Colors.green[600],
+            duration: const Duration(seconds: 2),
           ),
         );
+        
+        // Navigate to reset password screen after brief delay
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => ResetPasswordScreen(
+                  emailOrPhone: _emailOrPhoneController.text.trim(),
+                ),
+              ),
+            );
+          }
+        });
       }
     } catch (e) {
       // Error is handled by provider and shown in UI
@@ -118,7 +139,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     
                     // Subtitle
                     const Text(
-                      'Enter your registered email address and we\'ll send an OTP to your registered mobile number.',
+                      'Enter your registered email address or phone number and we\'ll send an OTP to your registered mobile number.',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
@@ -129,9 +150,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     
                     const SizedBox(height: 40),
                     
-                    // Email Field
+                    // Email or Phone Field
                     const Text(
-                      'EMAIL ADDRESS',
+                      'EMAIL ADDRESS OR PHONE NUMBER',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -141,14 +162,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: _emailOrPhoneController,
+                      keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.done,
-                      validator: Validators.validateEmail,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your email or phone number';
+                        }
+                        
+                        final trimmed = value.trim();
+                        final isEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(trimmed);
+                        final isPhone = RegExp(r'^[\d\s\-\+\(\)]{10,15}$').hasMatch(trimmed.replaceAll(RegExp(r'\D'), ''));
+                        
+                        if (!isEmail && !isPhone) {
+                          return 'Please enter a valid email address or phone number';
+                        }
+                        
+                        return null;
+                      },
                       onFieldSubmitted: (_) => _sendOTP(),
                       decoration: InputDecoration(
-                        hintText: 'Enter your email address',
-                        prefixIcon: const Icon(Icons.email_outlined),
+                        hintText: 'Enter your email or phone number',
+                        prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Colors.grey),
