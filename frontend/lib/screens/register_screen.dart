@@ -5,6 +5,21 @@ import '../providers/auth_provider.dart';
 import '../utils/validators.dart';
 import 'dashboard_screen.dart';
 
+// Custom formatter to prevent consecutive spaces
+class _NoConsecutiveSpacesFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // If the new text contains consecutive spaces, reject the change
+    if (newValue.text.contains('  ')) {
+      return oldValue;
+    }
+    return newValue;
+  }
+}
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -133,11 +148,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _nameController,
                     _nameFocus,
                     Icons.person_outline,
-                    'Enter your full name (letters only)',
+                    'Enter your full name (e.g., Sony Jose)',
                     TextInputType.text,
                     Validators.validateName,
                     _nameValidated,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]'))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                      _NoConsecutiveSpacesFormatter(),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   _buildValidatedTextField(

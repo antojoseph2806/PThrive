@@ -117,7 +117,7 @@ class Validators {
     return null;
   }
 
-  // Name validation with character checks (no spaces or special characters allowed)
+  // Name validation with character checks (allows spaces but not consecutive)
   static String? validateName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Name is required';
@@ -133,9 +133,14 @@ class Validators {
       return 'Name is too long (max 50 characters)';
     }
     
-    // Check for valid characters (only letters, no spaces or special characters)
-    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(trimmed)) {
-      return 'Name can only contain letters (no spaces or special characters)';
+    // Check for valid characters (only letters and single spaces)
+    if (!RegExp(r'^[a-zA-Z]+( [a-zA-Z]+)*$').hasMatch(trimmed)) {
+      return 'Name can only contain letters and single spaces';
+    }
+    
+    // Check for consecutive spaces
+    if (trimmed.contains('  ')) {
+      return 'Name cannot contain consecutive spaces';
     }
     
     return null;
