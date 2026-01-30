@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
 
 android {
@@ -23,9 +24,6 @@ android {
         targetSdk 36
         versionCode 1
         versionName "1.0.0"
-        
-        // Google Sign-In Web Client ID
-        resValue "string", "default_web_client_id", "388026117671-v6e860rn33m9h5v6o16majhhkqsh7gmd.apps.googleusercontent.com"
     }
 
     buildTypes {
@@ -39,4 +37,6 @@ flutter {
     source "../.."
 }
 
-dependencies {}
+dependencies {
+    implementation 'com.google.gms:google-services:4.3.15'
+}

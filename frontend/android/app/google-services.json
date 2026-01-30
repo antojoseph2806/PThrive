@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "388026117671",
+    "project_id": "pthrive-app-485815",
+    "storage_bucket": "pthrive-app-485815.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388026117671:android:3c72ba01833117178d2802",
+        "android_client_info": {
+          "package_name": "com.pthrive.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "388026117671-c9ahgfr3cdl8gs2h060ce49tp7bs5fd5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU0WS7WIDMo_SX14SR9o-x-0Geyu17oKo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "388026117671-c9ahgfr3cdl8gs2h060ce49tp7bs5fd5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

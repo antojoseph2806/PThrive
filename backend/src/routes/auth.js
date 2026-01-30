@@ -74,7 +74,7 @@ router.post('/register', validateRegister, async (req, res, next) => {
 
     if (error) {
       console.error('Registration error:', error);
-      throw new Error('Registration failed. Please try again.');
+      return res.status(500).json({ error: 'Registration failed. Please try again later.' });
     }
 
     const token = jwt.sign({ userId: data.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -133,7 +133,7 @@ router.post('/google', async (req, res, next) => {
     const { idToken } = req.body;
     
     if (!idToken) {
-      return res.status(400).json({ error: 'Google ID token is required' });
+      return res.status(400).json({ error: 'Authentication failed. Please try again.' });
     }
 
     // Verify Google token
@@ -146,7 +146,7 @@ router.post('/google', async (req, res, next) => {
     const { email, name, sub: googleId, picture } = payload;
 
     if (!email) {
-      return res.status(400).json({ error: 'Email not provided by Google' });
+      return res.status(400).json({ error: 'Unable to retrieve account information.' });
     }
 
     // Check if user exists
@@ -165,15 +165,15 @@ router.post('/google', async (req, res, next) => {
           email: email.toLowerCase(),
           google_id: googleId,
           profile_picture: picture,
-          phone_number: '', // Optional for Google sign-in
-          password: '' // No password for Google users
+          phone_number: '',
+          password: ''
         }])
         .select()
         .single();
 
       if (insertError) {
         console.error('Google sign-in error:', insertError);
-        throw new Error('Failed to create user account');
+        return res.status(500).json({ error: 'Sign-in failed. Please try again later.' });
       }
 
       user = newUser;
@@ -204,10 +204,7 @@ router.post('/google', async (req, res, next) => {
     });
   } catch (error) {
     console.error('Google authentication error:', error);
-    if (error.message.includes('Token used too late')) {
-      return res.status(401).json({ error: 'Google token expired. Please try again.' });
-    }
-    next(error);
+    return res.status(500).json({ error: 'Sign-in failed. Please try again later.' });
   }
 });
 

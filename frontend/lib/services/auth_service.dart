@@ -9,24 +9,36 @@ class AuthService {
   
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
+    serverClientId: '388026117671-v6e860rn33m9h5v6o16majhhkqsh7gmd.apps.googleusercontent.com',
   );
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.authEndpoint}/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    ).timeout(const Duration(seconds: 8));
+    try {
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.authEndpoint}/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else if (response.statusCode == 401) {
-      throw Exception('Invalid email or password');
-    } else if (response.statusCode >= 500) {
-      throw Exception('Server error. Please try again later.');
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Login failed');
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Invalid email or password');
+      } else if (response.statusCode >= 500) {
+        throw Exception('Service temporarily unavailable');
+      } else {
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['error'] ?? 'Login failed. Please try again.');
+        } catch (_) {
+          throw Exception('Login failed. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('Unable to connect. Please check your internet connection.');
     }
   }
 
@@ -36,27 +48,37 @@ class AuthService {
     String phoneNumber,
     String password,
   ) async {
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.authEndpoint}/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'fullName': fullName,
-        'email': email,
-        'phoneNumber': phoneNumber,
-        'password': password,
-      }),
-    ).timeout(const Duration(seconds: 8));
+    try {
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.authEndpoint}/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'fullName': fullName,
+          'email': email,
+          'phoneNumber': phoneNumber,
+          'password': password,
+        }),
+      ).timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else if (response.statusCode == 400 || response.statusCode == 409) {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Registration failed');
-    } else if (response.statusCode >= 500) {
-      throw Exception('Server error. Please try again later.');
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Registration failed');
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 409) {
+        throw Exception('Email already registered. Please login instead.');
+      } else if (response.statusCode >= 500) {
+        throw Exception('Service temporarily unavailable');
+      } else {
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['error'] ?? 'Registration failed. Please try again.');
+        } catch (_) {
+          throw Exception('Registration failed. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('Unable to connect. Please check your internet connection.');
     }
   }
 
@@ -69,14 +91,14 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
-        throw Exception('Google sign-in cancelled');
+        throw Exception('Sign-in cancelled');
       }
 
       // Get authentication details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       
       if (googleAuth.idToken == null) {
-        throw Exception('Failed to get Google ID token');
+        throw Exception('Unable to sign in with Google. Please try again.');
       }
 
       // Send ID token to backend for verification
@@ -88,16 +110,20 @@ class AuthService {
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
-      } else if (response.statusCode >= 400 && response.statusCode < 500) {
-        final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Google sign-in failed');
+      } else if (response.statusCode >= 500) {
+        throw Exception('Service temporarily unavailable');
       } else {
-        throw Exception('Server error. Please try again.');
+        throw Exception('Unable to sign in with Google. Please try again.');
       }
     } catch (e) {
       // Clean up on error
       await _googleSignIn.signOut();
-      rethrow;
+      
+      // Return user-friendly message
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('Unable to sign in with Google. Please try again.');
     }
   }
 

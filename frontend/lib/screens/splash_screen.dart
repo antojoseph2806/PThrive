@@ -56,13 +56,13 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // PThrive Logo
+              // PThrive Icon
               Image.asset(
-                'assets/images/pthrive_logo.png',
-                width: 200,
-                height: 200,
+                'assets/images/app_icon.png',
+                width: 150,
+                height: 150,
                 errorBuilder: (context, error, stackTrace) {
-                  // Fallback if logo not found
+                  // Fallback if icon not found
                   return Container(
                     width: 120,
                     height: 120,
