@@ -147,4 +147,69 @@ class AuthService {
       // Silent fail
     }
   }
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.authEndpoint}/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404) {
+        throw Exception('No account found with this email address');
+      } else if (response.statusCode == 429) {
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Too many attempts. Please try again later.');
+      } else if (response.statusCode >= 500) {
+        throw Exception('Service temporarily unavailable');
+      } else {
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['error'] ?? 'Unable to send OTP. Please try again.');
+        } catch (_) {
+          throw Exception('Unable to send OTP. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('Unable to connect. Please check your internet connection.');
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.authEndpoint}/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'otp': otp,
+          'newPassword': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode >= 500) {
+        throw Exception('Service temporarily unavailable');
+      } else {
+        try {
+          final error = jsonDecode(response.body);
+          throw Exception(error['error'] ?? 'Password reset failed. Please try again.');
+        } catch (_) {
+          throw Exception('Password reset failed. Please try again.');
+        }
+      }
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('Unable to connect. Please check your internet connection.');
+    }
+  }
 }
