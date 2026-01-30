@@ -9,7 +9,7 @@ class AuthService {
   
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId: '388026117671-v6e860rn33m9h5v6o16majhhkqsh7gmd.apps.googleusercontent.com',
+    serverClientId: '388026117671-c9ahgfr3cdl8gs2h060ce49tp7bs5fd5.apps.googleusercontent.com',
   );
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -84,6 +84,8 @@ class AuthService {
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
+      print('Starting Google Sign-In...');
+      
       // Sign out first to ensure fresh account picker
       await _googleSignIn.signOut();
       
@@ -91,15 +93,21 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
+        print('Google Sign-In cancelled by user');
         throw Exception('Sign-in cancelled');
       }
+
+      print('Google user obtained: ${googleUser.email}');
 
       // Get authentication details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       
       if (googleAuth.idToken == null) {
+        print('ID token is null');
         throw Exception('Unable to sign in with Google. Please try again.');
       }
+
+      print('ID token obtained, sending to backend...');
 
       // Send ID token to backend for verification
       final response = await _client.post(
@@ -107,6 +115,9 @@ class AuthService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'idToken': googleAuth.idToken}),
       ).timeout(const Duration(seconds: 15));
+
+      print('Backend response status: ${response.statusCode}');
+      print('Backend response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -116,6 +127,8 @@ class AuthService {
         throw Exception('Unable to sign in with Google. Please try again.');
       }
     } catch (e) {
+      print('Google Sign-In error: $e');
+      
       // Clean up on error
       await _googleSignIn.signOut();
       
