@@ -112,13 +112,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5B4E9F).withOpacity(0.1),
+                        color: const Color(0xFF3B82F6).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.lock_reset,
                         size: 40,
-                        color: Color(0xFF5B4E9F),
+                        color: Color(0xFF3B82F6),
                       ),
                     ),
                     
@@ -194,7 +194,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5B4E9F)),
+                          borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -259,7 +259,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: const Text(
                         'Back to Login',
                         style: TextStyle(
-                          color: Color(0xFF5B4E9F),
+                          color: Color(0xFF3B82F6),
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),

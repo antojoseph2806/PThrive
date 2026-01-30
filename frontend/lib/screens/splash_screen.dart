@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF5B4E9F), Color(0xFF7B6FB8)],
+            colors: [Color(0xFF3B82F6), Color(0xFF22D3EE)],
           ),
         ),
         child: Center(
@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: const Icon(
                       Icons.favorite_border,
                       size: 60,
-                      color: Color(0xFF5B4E9F),
+                      color: Color(0xFF3B82F6),
                     ),
                   );
                 },

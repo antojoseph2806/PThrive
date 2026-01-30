@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _emailOrPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 280,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF5B4E9F), Color(0xFF7B6FB8)],
+                  colors: [Color(0xFF3B82F6), Color(0xFF22D3EE)],
                 ),
               ),
               child: Center(
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Icon(
                             Icons.favorite,
                             size: 40,
-                            color: Color(0xFF5B4E9F),
+                            color: Color(0xFF3B82F6),
                           ),
                         );
                       },
@@ -89,11 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _emailOrPhoneController,
+                    keyboardType: TextInputType.text,
                     decoration: InputDecoration(
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                      hintText: 'Enter your email or phone number',
+                      prefixIcon: const Icon(Icons.person_outline),
                       filled: true,
                       fillColor: Colors.grey[100],
                       border: OutlineInputBorder(
@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
-                          color: Color(0xFF5B4E9F),
+                          color: Color(0xFF3B82F6),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -160,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: authProvider.isLoading ? null : () => _handleLogin(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5B4E9F),
+                            backgroundColor: const Color(0xFF3B82F6),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -196,15 +196,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      return OutlinedButton.icon(
+                      return OutlinedButton(
                         onPressed: authProvider.isLoading ? null : () => _handleGoogleSignIn(context),
-                        icon: const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
-                        label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/google.png',
+                              width: 24,
+                              height: 24,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.g_mobiledata, size: 24, color: Colors.red);
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Continue with Google'),
+                          ],
                         ),
                       );
                     },
@@ -236,10 +249,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin(BuildContext context) async {
     // Validate inputs
-    if (_emailController.text.trim().isEmpty) {
+    if (_emailOrPhoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter your email'),
+          content: Text('Please enter your email or phone number'),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 2),
         ),
@@ -262,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await authProvider.login(
-        _emailController.text.trim(),
+        _emailOrPhoneController.text.trim(),
         _passwordController.text,
       );
 
@@ -331,7 +344,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailOrPhoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

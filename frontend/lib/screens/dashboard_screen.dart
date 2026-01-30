@@ -21,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF5B4E9F),
+        backgroundColor: const Color(0xFF3B82F6),
         title: const Text('PThrive', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           Padding(
@@ -53,12 +53,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
                 children: [
-                  _buildDashboardCard(Icons.add_box_outlined, 'Book Physiotherapy', 'Start your healing', const Color(0xFF5B4E9F)),
-                  _buildDashboardCard(Icons.monitor_heart_outlined, 'PThrive Gear+', 'Custom devices', const Color(0xFF5B4E9F)),
-                  _buildDashboardCard(Icons.calendar_today_outlined, 'My Sessions', 'View appointments', const Color(0xFF5B4E9F)),
+                  _buildDashboardCard(Icons.add_box_outlined, 'Book Physiotherapy', 'Start your healing', const Color(0xFF3B82F6)),
+                  _buildDashboardCard(Icons.monitor_heart_outlined, 'PThrive Gear+', 'Custom devices', const Color(0xFF3B82F6)),
+                  _buildDashboardCard(Icons.calendar_today_outlined, 'My Sessions', 'View appointments', const Color(0xFF3B82F6)),
                   _buildDashboardCard(Icons.fitness_center_outlined, 'Exercises', 'Your programs', const Color(0xFFFFA726)),
-                  _buildDashboardCard(Icons.bar_chart_outlined, 'Progress & Reports', 'Track recovery', const Color(0xFF5B4E9F)),
-                  _buildDashboardCard(Icons.settings_outlined, 'Profile & Settings', 'Manage account', const Color(0xFF5B4E9F)),
+                  _buildDashboardCard(Icons.bar_chart_outlined, 'Progress & Reports', 'Track recovery', const Color(0xFF3B82F6)),
+                  _buildDashboardCard(Icons.settings_outlined, 'Profile & Settings', 'Manage account', const Color(0xFF3B82F6)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -76,7 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF5B4E9F),
+        selectedItemColor: const Color(0xFF3B82F6),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Sessions'),
@@ -94,22 +94,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2))],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(icon, size: 32, color: color),
+      child: Column(
+        children: [
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
             ),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                    child: Icon(icon, size: 32, color: color),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -127,3 +143,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 }
+

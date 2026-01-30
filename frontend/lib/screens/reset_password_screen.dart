@@ -162,13 +162,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5B4E9F).withOpacity(0.1),
+                        color: const Color(0xFF3B82F6).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.security,
                         size: 40,
-                        color: Color(0xFF5B4E9F),
+                        color: Color(0xFF3B82F6),
                       ),
                     ),
                     
@@ -240,7 +240,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5B4E9F)),
+                          borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -283,7 +283,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               color: _remainingTime == 0 
-                                  ? const Color(0xFF5B4E9F) 
+                                  ? const Color(0xFF3B82F6) 
                                   : Colors.grey,
                             ),
                           ),
@@ -334,7 +334,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5B4E9F)),
+                          borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -405,7 +405,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5B4E9F)),
+                          borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

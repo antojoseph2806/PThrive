@@ -12,7 +12,7 @@ void main() {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF5B4E9F),
+      systemNavigationBarColor: Color(0xFF3B82F6),
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -42,11 +42,11 @@ class MyApp extends StatelessWidget {
       title: 'PThrive',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF5B4E9F),
+        primaryColor: const Color(0xFF3B82F6),
         scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5B4E9F),
-          primary: const Color(0xFF5B4E9F),
+          seedColor: const Color(0xFF3B82F6),
+          primary: const Color(0xFF3B82F6),
         ),
       ),
       home: const SplashScreen(),

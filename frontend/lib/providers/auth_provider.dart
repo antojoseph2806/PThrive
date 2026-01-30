@@ -44,14 +44,14 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String emailOrPhone, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       // Start API call and storage access in parallel
-      final responseFuture = _authService.login(email, password);
+      final responseFuture = _authService.login(emailOrPhone, password);
       final prefsFuture = SharedPreferences.getInstance();
       
       final results = await Future.wait([responseFuture, prefsFuture]);
@@ -65,7 +65,7 @@ class AuthProvider with ChangeNotifier {
       prefs.setString('token', _token!);
       prefs.setString('userId', _user?['id'] ?? '');
       prefs.setString('userName', _user?['fullName'] ?? 'User');
-      prefs.setString('userEmail', _user?['email'] ?? email);
+      prefs.setString('userEmail', _user?['email'] ?? '');
       if (_user?['profilePicture'] != null) {
         prefs.setString('userProfilePicture', _user!['profilePicture']);
       }

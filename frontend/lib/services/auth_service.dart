@@ -12,18 +12,18 @@ class AuthService {
     serverClientId: '388026117671-c9ahgfr3cdl8gs2h060ce49tp7bs5fd5.apps.googleusercontent.com',
   );
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String emailOrPhone, String password) async {
     try {
       final response = await _client.post(
         Uri.parse('${ApiConfig.authEndpoint}/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode({'emailOrPhone': emailOrPhone, 'password': password}),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 401) {
-        throw Exception('Invalid email or password');
+        throw Exception('Invalid credentials. Please check your email/phone and password.');
       } else if (response.statusCode >= 500) {
         throw Exception('Service temporarily unavailable');
       } else {

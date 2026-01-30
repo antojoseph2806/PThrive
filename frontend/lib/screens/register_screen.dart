@@ -30,7 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: 200,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF5B4E9F), Color(0xFF7B6FB8)],
+                  colors: [Color(0xFF3B82F6), Color(0xFF22D3EE)],
                 ),
               ),
               child: Center(
@@ -51,7 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: const Icon(Icons.favorite, size: 30, color: Color(0xFF5B4E9F)),
+                          child: const Icon(Icons.favorite, size: 30, color: Color(0xFF3B82F6)),
                         );
                       },
                     ),
@@ -98,12 +98,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             children: [
                               TextSpan(
                                 text: 'Terms & Conditions',
-                                style: TextStyle(color: Color(0xFF5B4E9F)),
+                                style: TextStyle(color: Color(0xFF3B82F6)),
                               ),
                               TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Privacy Policy',
-                                style: TextStyle(color: Color(0xFF5B4E9F)),
+                                style: TextStyle(color: Color(0xFF3B82F6)),
                               ),
                             ],
                           ),
@@ -122,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? () => _handleRegister(context)
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5B4E9F),
+                            backgroundColor: const Color(0xFF3B82F6),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: authProvider.isLoading
@@ -153,13 +153,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 20),
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      return OutlinedButton.icon(
+                      return OutlinedButton(
                         onPressed: authProvider.isLoading ? null : () => _handleGoogleSignIn(context),
-                        icon: const Icon(Icons.g_mobiledata, size: 24, color: Colors.red),
-                        label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 56),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/google.png',
+                              width: 24,
+                              height: 24,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.g_mobiledata, size: 24, color: Colors.red);
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Continue with Google'),
+                          ],
                         ),
                       );
                     },

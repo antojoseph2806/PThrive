@@ -45,10 +45,10 @@ const validateRegister = (req, res, next) => {
 };
 
 const validateLogin = (req, res, next) => {
-  const { email, password } = req.body;
+  const { emailOrPhone, password } = req.body;
   
-  if (!email || !email.trim()) {
-    return res.status(400).json({ error: 'Email is required' });
+  if (!emailOrPhone || !emailOrPhone.trim()) {
+    return res.status(400).json({ error: 'Email or phone number is required' });
   }
   
   if (!password || !password.trim()) {
@@ -146,22 +146,70 @@ router.post('/register', validateRegister, async (req, res, next) => {
 
 router.post('/login', validateLogin, async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { emailOrPhone, password } = req.body;
+    const input = emailOrPhone.trim();
     
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .single();
-
-    if (error || !user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    // Determine if input is email or phone
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    let user;
+    
+    if (isEmail) {
+      // Search by email
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', input.toLowerCase())
+        .single();
+      
+      if (error || !data) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+      user = data;
+    } else {
+      // Search by phone number - try multiple formats
+      let phoneNumber = input.replace(/\D/g, '');
+      
+      // Try different phone number formats
+      const phoneVariants = [];
+      if (phoneNumber.startsWith('0')) {
+        phoneVariants.push(phoneNumber);
+        phoneVariants.push('91' + phoneNumber.substring(1));
+        phoneVariants.push(phoneNumber.substring(1));
+      } else if (phoneNumber.startsWith('91')) {
+        phoneVariants.push(phoneNumber);
+        phoneVariants.push('0' + phoneNumber.substring(2));
+        phoneVariants.push(phoneNumber.substring(2));
+      } else {
+        phoneVariants.push(phoneNumber);
+        phoneVariants.push('91' + phoneNumber);
+        phoneVariants.push('0' + phoneNumber);
+      }
+      
+      // Search for user with any phone variant
+      let userData = null;
+      for (const variant of phoneVariants) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('phone_number', variant)
+          .single();
+        
+        if (data && !error) {
+          userData = data;
+          break;
+        }
+      }
+      
+      if (!userData) {
+        return res.status(401).json({ error: 'Invalid phone number or password' });
+      }
+      user = userData;
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: isEmail ? 'Invalid email or password' : 'Invalid phone number or password' });
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
